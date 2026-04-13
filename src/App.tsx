@@ -1,6 +1,42 @@
-import { useState } from 'react';
-import { BatteryCharging, ShieldAlert, Scan, Cpu, Radio, Battery, Activity, Lock, Skull } from 'lucide-react';
+import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
+import { BatteryCharging, ShieldAlert, Scan, Cpu, Radio, Battery, Activity, Lock, Skull, AlertTriangle } from 'lucide-react';
 import NanoTraceModel from './components/NanoTraceModel';
+
+class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Canvas Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-neutral-900 rounded-xl border border-red-900/50 p-6 text-center">
+          <AlertTriangle className="text-red-500 mb-4" size={48} />
+          <h2 className="text-red-400 font-mono text-lg mb-2">WebGL Render Error</h2>
+          <p className="text-neutral-400 text-sm max-w-md">
+            {this.state.error?.message || "An unexpected error occurred while rendering the 3D model."}
+          </p>
+          <button 
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="mt-6 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-sm transition-colors"
+          >
+            Retry Render
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [isCharging, setIsCharging] = useState(false);
@@ -33,12 +69,14 @@ export default function App() {
           <div className="lg:col-span-7 space-y-6">
             {/* 3D Canvas Container */}
             <div className="h-[500px] lg:h-[600px] w-full relative group">
-              <NanoTraceModel 
-                isCharging={isCharging} 
-                isSOS={isSOS} 
-                xRayMode={xRayMode} 
-                isTampered={isTampered}
-              />
+              <ErrorBoundary>
+                <NanoTraceModel 
+                  isCharging={isCharging} 
+                  isSOS={isSOS} 
+                  xRayMode={xRayMode} 
+                  isTampered={isTampered}
+                />
+              </ErrorBoundary>
               
               {/* Floating Controls */}
               <div className="absolute top-4 right-4 flex flex-col gap-2">

@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Environment, OrbitControls, RoundedBox, ContactShadows, Text, Html } from '@react-three/drei';
+import { Environment, OrbitControls, RoundedBox, ContactShadows, Text } from '@react-three/drei';
 import { useRef } from 'react';
 import * as THREE from 'three';
 
@@ -11,17 +11,27 @@ interface NanoTraceProps {
 }
 
 // Helper component for sleek cyber-labels
-function ComponentLabel({ text, position, visible }: { text: string, position: [number, number, number], visible: boolean }) {
+function ComponentLabel({ text, position, visible, lineLength = 0.05 }: { text: string, position: [number, number, number], visible: boolean, lineLength?: number }) {
   if (!visible) return null;
   return (
-    <Html position={position} center className="pointer-events-none z-50">
-      <div className="flex flex-col items-center">
-        <div className="px-2 py-1 bg-black/90 border border-neutral-700 text-neutral-300 text-[9px] font-mono whitespace-nowrap rounded shadow-lg backdrop-blur-md tracking-wider">
-          {text}
-        </div>
-        <div className="w-px h-4 bg-gradient-to-b from-neutral-500 to-transparent"></div>
-      </div>
-    </Html>
+    <group position={position}>
+      <Text
+        position={[0, lineLength, 0]}
+        fontSize={0.035}
+        color="#e5e5e5"
+        anchorX="center"
+        anchorY="bottom"
+        outlineWidth={0.002}
+        outlineColor="#000000"
+      >
+        {text}
+      </Text>
+      {/* Pointer line */}
+      <mesh position={[0, lineLength / 2, 0]}>
+        <cylinderGeometry args={[0.002, 0.002, lineLength, 8]} />
+        <meshBasicMaterial color="#888888" />
+      </mesh>
+    </group>
   );
 }
 
@@ -154,7 +164,7 @@ function Device({ isCharging, isSOS, xRayMode, isTampered }: NanoTraceProps) {
             <planeGeometry args={[0.48, 0.48]} />
             <meshStandardMaterial color="#d4af37" metalness={1} roughness={0.2} wireframe={true} />
           </mesh>
-          <ComponentLabel text="nRF9160 SiP (LTE-M/GPS)" position={[0, 0.35, 0]} visible={xRayMode} />
+          <ComponentLabel text="nRF9160 SiP (LTE-M/GPS)" position={[0, 0.2, 0]} lineLength={0.3} visible={xRayMode} />
         </group>
 
         {/* Radio Module / Meandering Antenna Trace */}
@@ -164,7 +174,7 @@ function Device({ isCharging, isSOS, xRayMode, isTampered }: NanoTraceProps) {
           <mesh position={[0, 0, 0]}><boxGeometry args={[0.2, 0.02, 0.01]}/><meshStandardMaterial color="#d4af37" metalness={1}/></mesh>
           <mesh position={[-0.09, -0.075, 0]}><boxGeometry args={[0.02, 0.15, 0.01]}/><meshStandardMaterial color="#d4af37" metalness={1}/></mesh>
           <mesh position={[0, -0.15, 0]}><boxGeometry args={[0.2, 0.02, 0.01]}/><meshStandardMaterial color="#d4af37" metalness={1}/></mesh>
-          <ComponentLabel text="BLE Antenna Trace" position={[0, 0.35, 0]} visible={xRayMode} />
+          <ComponentLabel text="BLE Antenna Trace" position={[0, 0.15, 0]} lineLength={0.15} visible={xRayMode} />
         </group>
 
         {/* Power Cell: Solid-state battery (Detailed) */}
@@ -189,13 +199,13 @@ function Device({ isCharging, isSOS, xRayMode, isTampered }: NanoTraceProps) {
             <boxGeometry args={[0.04, 0.08, 0.01]} />
             <meshStandardMaterial color="#888" metalness={1} roughness={0.2} />
           </mesh>
-          <ComponentLabel text="Solid-State Battery" position={[0, 0.35, 0]} visible={xRayMode} />
+          <ComponentLabel text="Solid-State Battery" position={[0, 0.25, 0]} lineLength={0.15} visible={xRayMode} />
         </group>
 
         {/* Induction Coil: Multi-ring flat spiral */}
         <group ref={coilRef} position={[0.9, 0, 0.02]}>
           {[0.06, 0.09, 0.12, 0.15].map((radius, i) => (
-            <mesh key={i} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh key={i}>
               <torusGeometry args={[radius, 0.012, 16, 32]} />
               <meshStandardMaterial 
                 color="#b87333" 
@@ -206,7 +216,7 @@ function Device({ isCharging, isSOS, xRayMode, isTampered }: NanoTraceProps) {
               />
             </mesh>
           ))}
-          <ComponentLabel text="Qi-Induction Coil" position={[0, 0.35, 0]} visible={xRayMode} />
+          <ComponentLabel text="Qi-Induction Coil" position={[0, 0.15, 0]} lineLength={0.35} visible={xRayMode} />
         </group>
 
         {/* Audio System: Piezo-electric plate (Detailed) */}
@@ -221,7 +231,7 @@ function Device({ isCharging, isSOS, xRayMode, isTampered }: NanoTraceProps) {
             <cylinderGeometry args={[0.06, 0.06, 0.005, 32]} />
             <meshStandardMaterial color="#e0e0e0" metalness={0.4} roughness={0.7} />
           </mesh>
-          <ComponentLabel text="Piezo Audio" position={[0, 0.15, 0]} visible={xRayMode} />
+          <ComponentLabel text="Piezo Audio" position={[0, 0.08, 0]} lineLength={0.22} visible={xRayMode} />
         </group>
 
         {/* Integrity Mic (Detailed) */}
@@ -236,7 +246,7 @@ function Device({ isCharging, isSOS, xRayMode, isTampered }: NanoTraceProps) {
             <circleGeometry args={[0.02, 16]} />
             <meshBasicMaterial color="#000" />
           </mesh>
-          <ComponentLabel text="Integrity Mic" position={[0, 0.15, 0]} visible={xRayMode} />
+          <ComponentLabel text="Integrity Mic" position={[0, 0.04, 0]} lineLength={0.36} visible={xRayMode} />
         </group>
 
         {/* SOS LED Indicator */}
